@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Capture Master</string>
+    <string name="temp_file_name">tempFile</string>
+</resources>
