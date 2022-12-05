@@ -123,6 +123,18 @@ class AdvertiserService : Service() {
             }
     }
 
+    private fun publishFiles(uris: Array<Uri?>) {
+        for (i in 0..3){
+            val file = uris[i]?.let { contentResolver.openFileDescriptor(it, "r") }
+            if(file != null) {
+                val filePayload = Payload.fromFile(file)
+                Nearby.getConnectionsClient(applicationContext)
+                    .sendPayload(clients[i % REQUIRED_CLIENT_COUNT], filePayload)
+            } else {
+                Log.e("AdvertiserService", "Failed to send file")
+            }
+        }
+    }
 
     fun sendFiles(uris: Array<Uri?>){
         predictions = ArrayList<Prediction>()
@@ -134,19 +146,11 @@ class AdvertiserService : Service() {
             }
             clientsCount > REQUIRED_CLIENT_COUNT -> {
                 showToast("Connected Clients: $clientsCount. " +
-                        "Only the first ${REQUIRED_CLIENT_COUNT-clientsCount} clients will be used")
+                        "Only the first ${REQUIRED_CLIENT_COUNT} clients will be used")
+                publishFiles(uris)
             }
             else -> {
-                for (i in 0..3){
-                    val file = uris[i]?.let { contentResolver.openFileDescriptor(it, "r") }
-                    if(file != null) {
-                        val filePayload = Payload.fromFile(file)
-                        Nearby.getConnectionsClient(applicationContext)
-                            .sendPayload(clients[i % REQUIRED_CLIENT_COUNT], filePayload)
-                    } else {
-                        Log.e("AdvertiserService", "Failed to send file")
-                    }
-                }
+                publishFiles(uris)
             }
          }
     }
@@ -162,12 +166,12 @@ class AdvertiserService : Service() {
     }
 
     private fun showToast(message: String) {
-        Toast.makeText(applicationContext, message, Toast.LENGTH_LONG).show()
+        Toast.makeText(applicationContext, message, Toast.LENGTH_SHORT).show()
     }
 
     companion object {
         const val PREDICTION_DONE_EVENT = "com.example.caturemaster.predicion.DONE"
         const val PREDICTION_EXTRA = "com.example.caturemaster.predicion.digit"
-        const val REQUIRED_CLIENT_COUNT = 3
+        const val REQUIRED_CLIENT_COUNT = 4
     }
 }
