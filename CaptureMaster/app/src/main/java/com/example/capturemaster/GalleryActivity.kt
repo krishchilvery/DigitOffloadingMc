@@ -21,7 +21,7 @@ class GalleryActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener 
     private var digit = 0
 
     private fun getImages() {
-
+        viewBinding.galleryView.removeAllViews()
         val collection =
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 MediaStore.Images.Media.getContentUri(
