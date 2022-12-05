@@ -12,6 +12,7 @@ import android.os.Bundle
 import android.os.IBinder
 import android.util.Log
 import android.view.View
+import android.widget.ListPopupWindow
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
@@ -30,6 +31,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var viewBinding: ActivityMainBinding
     private lateinit var bmp: Bitmap
     private lateinit var quadrants: Array<Uri?>
+    private lateinit var imageUri: Uri
+
+    private lateinit var digitListPopupWindow: ListPopupWindow
+    private val digits = arrayListOf<Int>(0,1,2,3,4,5,6,7,8,9)
 
 
     private var aService: AdvertiserService? = null
@@ -77,6 +82,7 @@ class MainActivity : AppCompatActivity() {
                 if (it != null) {
                     bmp = it
                 }
+                imageUri = saveImageToUri(bmp)
                 quadrants = processImg(bmp)
                 viewBinding.imagePreview.setImageBitmap(bmp)
                 viewBinding.processButton.visibility = View.VISIBLE
@@ -89,11 +95,19 @@ class MainActivity : AppCompatActivity() {
             captureLauncher.launch(null)
         }
         viewBinding.processButton.setOnClickListener {
-            startUploadActivity(quadrants)
+            startUploadActivity()
+        }
+        viewBinding.galleryButton.setOnClickListener {
+            navigateToGallery()
         }
     }
 
-    private fun startUploadActivity(quadrants: Array<Uri?>) {
+    private fun navigateToGallery() {
+        val galleryIntent = Intent(this, GalleryActivity::class.java)
+        startActivity(galleryIntent)
+    }
+
+    private fun startUploadActivity() {
         val uris = arrayOfNulls<String>(4)
         for(i in 0..3){
             uris[i] = quadrants[i].toString()
@@ -101,6 +115,8 @@ class MainActivity : AppCompatActivity() {
         val uploadIntent = Intent(this, UploadActivity::class.java)
         uploadIntent.putExtra(URIS_EXTRA, uris)
         uploadIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION + Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+
+        uploadIntent.putExtra(IMAGE_URI_EXTRA, imageUri.toString())
         startActivity(uploadIntent)
     }
 
@@ -131,6 +147,15 @@ class MainActivity : AppCompatActivity() {
         return quadrants
     }
 
+    private fun saveImageToUri(bmp: Bitmap): Uri {
+        val file = File(cacheDir, "tempImage.jpg")
+        bmp.compress(Bitmap.CompressFormat.JPEG, 100, file.outputStream())
+        return FileProvider.getUriForFile(
+            this,
+            "$packageName.provider", file
+        )
+    }
+
     private fun saveQuadrantToUri(bmp: Bitmap, quadrantNumber: Number): Uri {
         val file = File(cacheDir, "quadrant-$quadrantNumber.png")
         bmp.compress(Bitmap.CompressFormat.PNG, 100, file.outputStream())
@@ -142,8 +167,10 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         const val TAG = "MainActivity"
+        const val IMAGE_URI_EXTRA = "com.example.capturemaster.extras.imageuri"
         const val URIS_EXTRA = "com.example.capturemaster.extras.uris"
         const val RETAKE_EXTRA = "com.example.capturemaster.extras.retake"
+        const val DIGIT_EXTRA = "com.example.capturemaster.extras.digit"
 
         private val REQUIRED_PERMISSIONS: Array<String> = when {
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ->

@@ -7,6 +7,7 @@ import android.os.Binder
 import android.os.IBinder
 import android.util.Log
 import android.widget.Toast
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.android.gms.nearby.Nearby
 import com.google.android.gms.nearby.connection.*
 import com.google.gson.Gson
@@ -71,6 +72,7 @@ class AdvertiserService : Service() {
             val max = sums.max()
             val label = sums.indexOfFirst { it == max }
             showToast("Predicted Digit: $label")
+            broadcastPrediction(label)
         }
 
         override fun onPayloadTransferUpdate(endpointId: String, update: PayloadTransferUpdate) {
@@ -149,6 +151,12 @@ class AdvertiserService : Service() {
          }
     }
 
+    fun broadcastPrediction(digit: Int) {
+        val intent = Intent(PREDICTION_DONE_EVENT)
+        intent.putExtra(PREDICTION_EXTRA, digit)
+        LocalBroadcastManager.getInstance(applicationContext).sendBroadcast(intent)
+    }
+
     override fun onBind(intent: Intent): IBinder {
         return binder
     }
@@ -158,8 +166,8 @@ class AdvertiserService : Service() {
     }
 
     companion object {
-        const val SNACKBAR_EVENT = "SNACKBAR_EVENT"
-        const val SNACKBAR_MESSAGE_EXTRA = "SNACKBAR_MESSAGE_EXTRA"
-        const val REQUIRED_CLIENT_COUNT = 1
+        const val PREDICTION_DONE_EVENT = "com.example.caturemaster.predicion.DONE"
+        const val PREDICTION_EXTRA = "com.example.caturemaster.predicion.digit"
+        const val REQUIRED_CLIENT_COUNT = 3
     }
 }
