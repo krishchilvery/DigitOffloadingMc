@@ -94,6 +94,7 @@ println "OpenCV: " + project.buildscript.sourceFile
 
 android {
     compileSdkVersion 33
+    namespace 'org.opencv'
     //buildToolsVersion "27.0.3" // not needed since com.android.tools.build:gradle:3.0.0
 
     defaultConfig {
@@ -120,6 +121,9 @@ android {
             res.srcDirs = ['java/res']
             manifest.srcFile 'java/AndroidManifest.xml'
         }
+    }
+    buildFeatures {
+        aidl true
     }
 }
 
